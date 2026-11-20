@@ -4,85 +4,117 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cat bond cost model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f6f5f1; --panel: #ffffff; --ink: #1b1f24; --muted: #5f6770;
-    --line: #dcdad3; --accent: #0b5cad; --accent-soft: #e6f0fa;
-    --good: #1a7f4b; --bad: #b3261e; --mark: #fff3bf;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #14171a; --panel: #1d2125; --ink: #e8eaed; --muted: #9aa3ad;
-      --line: #30363d; --accent: #6cb0f5; --accent-soft: #1c2a3a;
-      --good: #5bd08f; --bad: #ff8a80; --mark: #4a4216;
-    }
+    color-scheme: light;
+    --red: #C41E3A; --blue: #0071BC; --teal: #00B0BF; --navy: #065B82;
+    --bg: #f5f7f9; --panel: #ffffff; --ink: #1d2730; --muted: #5b6770;
+    --line: #d9dfe4; --grid: #e6eaee; --blue-soft: #e8f2f9; --mark: #fde9ec;
+    --good: #1a7f4b;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0; background: var(--bg); color: var(--ink);
-    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    font: 400 15px/1.45 Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
   }
-  header, main { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
-  header { padding-top: 28px; padding-bottom: 8px; }
-  h1 { font-size: 24px; margin: 0 0 4px; }
-  h2 { font-size: 16px; margin: 0 0 12px; }
-  .sub { color: var(--muted); margin: 0; max-width: 70ch; }
-  .layout { display: grid; grid-template-columns: 360px 1fr; gap: 20px; margin-top: 20px; }
-  @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
-  .panel {
-    background: var(--panel); border: 1px solid var(--line);
-    border-radius: 10px; padding: 18px;
-  }
+  .band { background: var(--panel); border-top: 6px solid var(--red); border-bottom: 1px solid var(--line); }
+  header, main, footer { max-width: 1160px; margin: 0 auto; padding: 0 20px; }
+  header { padding-top: 22px; padding-bottom: 18px; }
+  h1 { font-size: 26px; font-weight: 600; margin: 0 0 4px; color: var(--red); }
+  h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; color: var(--navy); }
+  .sub { color: var(--muted); margin: 0; max-width: 72ch; }
+  .layout { display: grid; grid-template-columns: 370px 1fr; gap: 20px; margin-top: 20px; }
+  .layout > * { min-width: 0; }
+  @media (max-width: 880px) { .layout { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; }
   .panel + .panel { margin-top: 20px; }
-  fieldset { border: 0; padding: 0; margin: 0 0 16px; }
+  fieldset { border: 0; padding: 0; margin: 0 0 16px; min-width: 0; }
   legend {
-    font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
-    color: var(--muted); padding: 0; margin-bottom: 8px;
+    font-size: 12px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase;
+    color: var(--blue); padding: 0; margin-bottom: 8px;
   }
-  .field { display: grid; grid-template-columns: 1fr 120px; gap: 10px; align-items: center; margin-bottom: 8px; }
+  .field { position: relative; display: grid; grid-template-columns: 1fr 132px; gap: 10px; align-items: center; margin-bottom: 8px; }
   .field label { font-size: 14px; }
-  .field small { display: block; color: var(--muted); font-size: 12px; }
-  input[type=number], select {
+  .field label::after {
+    content: "?"; display: inline-block; width: 15px; height: 15px; margin-left: 6px;
+    border-radius: 50%; background: var(--blue-soft); color: var(--blue);
+    font-size: 11px; font-weight: 600; line-height: 15px; text-align: center; vertical-align: 1px;
+  }
+  .field[data-tip]::after {
+    content: attr(data-tip); position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 20;
+    background: var(--navy); color: #fff; font-size: 13px; line-height: 1.4;
+    padding: 9px 11px; border-radius: 6px; opacity: 0; visibility: hidden;
+    transition: opacity .12s; pointer-events: none;
+  }
+  .field[data-tip]:hover::after, .field[data-tip]:focus-within::after { opacity: 1; visibility: visible; }
+  input[type=text], select {
     width: 100%; padding: 7px 8px; font: inherit; color: var(--ink);
-    background: var(--bg); border: 1px solid var(--line); border-radius: 6px;
-    text-align: right;
+    background: #fff; border: 1px solid var(--line); border-radius: 6px; text-align: right;
+    font-variant-numeric: tabular-nums;
   }
   select { text-align: left; }
-  input:focus, select:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  input[type=range] { width: 100%; accent-color: var(--red); }
+  input:focus, select:focus, button:focus-visible, svg:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
   .buttons { display: flex; gap: 8px; flex-wrap: wrap; }
   button {
-    font: inherit; padding: 7px 12px; border-radius: 6px; cursor: pointer;
-    border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+    font: inherit; font-weight: 500; padding: 7px 12px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--line); background: #fff; color: var(--ink);
   }
-  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-  @media (prefers-color-scheme: dark) { button.primary { color: #0b1420; } }
+  button.primary { background: var(--red); border-color: var(--red); color: #fff; }
   .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
-  .kpi { background: var(--accent-soft); border-radius: 8px; padding: 12px; }
-  .kpi .v { font-size: 22px; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .kpi { background: var(--blue-soft); border-left: 4px solid var(--blue); border-radius: 6px; padding: 12px; }
+  .kpi .v { font-size: 22px; font-weight: 600; color: var(--navy); }
   .kpi .l { font-size: 12px; color: var(--muted); }
-  .verdict { margin: 14px 0 0; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); }
+  .verdict { margin: 14px 0 0; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--line); }
   .verdict.good { border-color: var(--good); color: var(--good); }
-  .verdict.bad { border-color: var(--bad); color: var(--bad); }
+  .verdict.bad { border-color: var(--red); color: var(--red); }
   table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
   th, td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
   th:first-child, td:first-child { text-align: left; white-space: normal; }
-  thead th { font-size: 12px; color: var(--muted); font-weight: 600; vertical-align: bottom; white-space: normal; }
-  tr.current td { font-weight: 650; }
-  td.mark { background: var(--mark); }
+  thead th { font-size: 12px; color: var(--navy); font-weight: 600; vertical-align: bottom; white-space: normal; border-bottom: 2px solid var(--blue); }
+  tr.current td { font-weight: 600; }
+  td.mark { background: var(--mark); font-weight: 600; }
   .scroll { overflow-x: auto; }
   .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0 28px; }
-  @media (max-width: 700px) { .two { grid-template-columns: 1fr; } }
+  @media (max-width: 720px) { .two { grid-template-columns: 1fr; } }
   .note { color: var(--muted); font-size: 12px; margin: 10px 0 0; }
-  .neg { color: var(--bad); }
-  footer { max-width: 1120px; margin: 24px auto 40px; padding: 0 20px; color: var(--muted); font-size: 12px; }
+  .neg { color: var(--red); }
+  footer { margin-top: 24px; margin-bottom: 40px; color: var(--muted); font-size: 12px; }
+
+  /* Scenario chart */
+  .controls { display: grid; grid-template-columns: 1fr 300px; gap: 8px 28px; margin-bottom: 6px; }
+  @media (max-width: 720px) { .controls { grid-template-columns: 1fr; } }
+  .controls .field { grid-template-columns: 1fr; gap: 4px; margin: 0; }
+  .controls .field.inline { grid-template-columns: 1fr 90px; }
+  .slider-row { display: flex; align-items: center; gap: 12px; }
+  .slider-row output { min-width: 62px; font-weight: 600; color: var(--navy); }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 13px; margin: 10px 0 2px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .key { width: 18px; height: 0; border-top: 3px solid; border-radius: 2px; }
+  .chartwrap { position: relative; }
+  .chartwrap svg { display: block; width: 100%; height: auto; }
+  .tip {
+    position: absolute; top: 8px; pointer-events: none; display: none; min-width: 180px;
+    background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font-size: 13px;
+  }
+  .tip .yr { color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+  .tip .r { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+  .tip .r b { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .tip .r span { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
 </style>
 </head>
 <body>
+<div class="band">
 <header>
   <h1>Cat bond cost model</h1>
   <p class="sub">What a parametric catastrophe bond costs the sponsor, and what it pays investors,
-    for a given cover, trigger frequency and term. Change any input and everything recalculates.</p>
+    for a given cover, trigger frequency and term. Change any input and everything recalculates.
+    Hover over an input for a plain explanation.</p>
 </header>
+</div>
 
 <main>
   <div class="layout">
@@ -91,42 +123,40 @@
       <form id="form" autocomplete="off">
         <fieldset>
           <legend>Cover</legend>
-          <div class="field"><label for="cover">Cover amount ($)</label>
-            <input type="number" id="cover" min="0" step="100000"></div>
-          <div class="field"><label for="period">Return period<small>Trigger expected once in N years</small></label>
-            <input type="number" id="period" min="1" step="1"></div>
-          <div class="field"><label for="term">Term (years)</label>
-            <input type="number" id="term" min="1" max="50" step="1"></div>
-          <div class="field"><label for="renew">After a trigger</label>
-            <select id="renew">
-              <option value="0">Bond ends</option>
-              <option value="1">Cover is renewed</option>
-            </select></div>
+          <div class="field" data-tip="The amount of money the bond pays out if the disaster trigger is met. Investors set this money aside at the start.">
+            <label for="cover">Cover amount ($)</label><input type="text" inputmode="decimal" id="cover"></div>
+          <div class="field" data-tip="How often you expect a disaster bad enough to trigger a payout. 10 means about once every 10 years, or a 10% chance each year.">
+            <label for="period">Return period (years)</label><input type="text" inputmode="decimal" id="period"></div>
+          <div class="field" data-tip="How many years the cover lasts.">
+            <label for="term">Term (years)</label><input type="text" inputmode="numeric" id="term"></div>
+          <div class="field" data-tip="What happens after a payout. 'Bond ends' means cover stops and no more premium is paid. 'Cover is renewed' means a new bond replaces it and premiums carry on.">
+            <label for="renew">After a trigger</label>
+            <select id="renew"><option value="0">Bond ends</option><option value="1">Cover is renewed</option></select></div>
         </fieldset>
         <fieldset>
           <legend>Pricing</legend>
-          <div class="field"><label for="multiple">Risk multiple<small>Premium rate divided by expected loss</small></label>
-            <input type="number" id="multiple" min="0" step="0.05"></div>
-          <div class="field"><label for="override">Premium rate override (%)<small>Blank uses the multiple</small></label>
-            <input type="number" id="override" min="0" step="0.5" placeholder="none"></div>
-          <div class="field"><label for="fee">Fee on top (% of cover a year)</label>
-            <input type="number" id="fee" min="0" step="0.25"></div>
-          <div class="field"><label for="setup">Set-up cost ($, one-off)</label>
-            <input type="number" id="setup" min="0" step="25000"></div>
+          <div class="field" data-tip="How much investors charge on top of the loss they expect. 1.0 means they only break even. 1.5 means the premium is one and a half times the expected loss.">
+            <label for="multiple">Risk multiple</label><input type="text" inputmode="decimal" id="multiple"></div>
+          <div class="field" data-tip="If you already have a quote, type the yearly premium rate here. Leave it empty to work the rate out from the return period and risk multiple.">
+            <label for="override">Premium rate override (%)</label><input type="text" inputmode="decimal" id="override" placeholder="none"></div>
+          <div class="field" data-tip="A yearly charge for running the bond, paid on top of the premium, as a percentage of the cover.">
+            <label for="fee">Fee on top (% a year)</label><input type="text" inputmode="decimal" id="fee"></div>
+          <div class="field" data-tip="One-off legal and structuring costs paid when the bond is created.">
+            <label for="setup">Set-up cost ($)</label><input type="text" inputmode="decimal" id="setup"></div>
         </fieldset>
         <fieldset>
           <legend>Rates</legend>
-          <div class="field"><label for="yield">Collateral yield (%)<small>T-bills, earned by investors</small></label>
-            <input type="number" id="yield" min="0" step="0.25"></div>
-          <div class="field"><label for="discount">Discount rate (%)</label>
-            <input type="number" id="discount" min="0" step="0.25"></div>
+          <div class="field" data-tip="Interest earned on the investors' money while it sits in safe government bills. Investors keep it. The sponsor does not pay it.">
+            <label for="yield">Collateral yield (%)</label><input type="text" inputmode="decimal" id="yield"></div>
+          <div class="field" data-tip="Used to turn future money into today's value. Money paid or received later counts for less.">
+            <label for="discount">Discount rate (%)</label><input type="text" inputmode="decimal" id="discount"></div>
         </fieldset>
         <fieldset>
           <legend>Endowment (optional)</legend>
-          <div class="field"><label for="endow">Donor endowment ($)<small>Its yield offsets the premium</small></label>
-            <input type="number" id="endow" min="0" step="50000"></div>
-          <div class="field"><label for="endowYield">Endowment yield (%)</label>
-            <input type="number" id="endowYield" min="0" step="0.25"></div>
+          <div class="field" data-tip="A pot of donor money that is invested rather than spent. The interest it earns helps pay the premium each year. Leave at 0 if not used.">
+            <label for="endow">Donor endowment ($)</label><input type="text" inputmode="decimal" id="endow"></div>
+          <div class="field" data-tip="The yearly interest earned on the endowment.">
+            <label for="endowYield">Endowment yield (%)</label><input type="text" inputmode="decimal" id="endowYield"></div>
         </fieldset>
         <div class="buttons">
           <button type="button" id="reset">Reset</button>
@@ -141,15 +171,33 @@
         <h2>Results</h2>
         <div class="kpis" id="kpis"></div>
         <p class="verdict" id="verdict"></p>
-        <div class="two" style="margin-top:16px">
-          <div>
-            <h2>Sponsor or donor</h2>
-            <table id="sponsor"></table>
+      </section>
+
+      <section class="panel" aria-label="Sponsor scenarios">
+        <h2>Sponsor scenarios: what you pay and what comes back</h2>
+        <div class="controls">
+          <div class="field" data-tip="The year the disaster happens and the bond pays out, in the two payout scenarios. Drag to see how timing changes the result.">
+            <label for="payoutYear">Payout year</label>
+            <div class="slider-row"><input type="range" id="payoutYear" min="1" max="10" step="1"><output id="payoutYearOut" for="payoutYear"></output></div>
           </div>
-          <div>
-            <h2>Investor</h2>
-            <table id="investor"></table>
-          </div>
+          <div class="field inline" data-tip="With layered triggers, a smaller disaster releases only part of the cover. This is the share paid out in the middle scenario.">
+            <label for="partial">Partial payout share (%)</label><input type="text" inputmode="decimal" id="partial"></div>
+        </div>
+        <div class="legend" id="legend"></div>
+        <div class="chartwrap" id="chartwrap">
+          <svg id="chart" viewBox="0 0 760 330" role="img" tabindex="0"
+               aria-label="Line chart of the sponsor's running cash position by year in three scenarios. The same figures are in the table below."></svg>
+          <div class="tip" id="tip"></div>
+        </div>
+        <p class="note">Running cash position: payout received, less set-up cost, premium and fee paid so far. Not discounted.</p>
+        <div class="scroll" style="margin-top:12px"><table id="scen"></table></div>
+        <p class="note" id="scenNote"></p>
+      </section>
+
+      <section class="panel" aria-label="Detail">
+        <div class="two">
+          <div><h2>Sponsor or donor (expected values)</h2><table id="sponsor"></table></div>
+          <div><h2>Investor</h2><table id="investor"></table></div>
         </div>
       </section>
 
@@ -161,7 +209,8 @@
 
       <section class="panel" aria-label="Sensitivity">
         <h2>Sensitivity: return period against risk multiple</h2>
-        <div class="field" style="grid-template-columns:auto 1fr;max-width:520px">
+        <div class="field" style="grid-template-columns:auto 1fr;max-width:540px"
+             data-tip="Choose which figure the grid shows for each combination of return period and risk multiple.">
           <label for="metric">Show</label>
           <select id="metric">
             <option value="rate">Premium rate (% of cover a year)</option>
@@ -183,7 +232,7 @@
 
 <footer>
   Illustrative model, not a quote. Expected values weight each year by the chance the bond is still live.
-  Cash flows are discounted at year end. The premium rate is the trigger probability times the risk multiple unless overridden.
+  Present values discount cash flows at year end. The premium rate is the trigger probability times the risk multiple unless overridden.
 </footer>
 
 <script>
@@ -191,7 +240,8 @@
 const DEFAULTS = {
   cover: 10000000, period: 10, term: 10, renew: 0,
   multiple: 1.5, override: null, fee: 2, setup: 275000,
-  yield: 5, discount: 5, endow: 0, endowYield: 4.5
+  yield: 5, discount: 5, endow: 0, endowYield: 4.5,
+  payoutYear: 5, partial: 70
 };
 
 // Pure calculation. Percent inputs arrive as whole numbers (5 means 5%).
@@ -207,13 +257,7 @@ function compute(i) {
     const live = i.renew ? 1 : Math.pow(1 - p, t - 1);
     const trig = live * p;
     const df = 1 / Math.pow(1 + d, t);
-    const row = {
-      t, live, trig,
-      prem: live * rate * i.cover,
-      fee: live * fee * i.cover,
-      payout: trig * i.cover,
-      df
-    };
+    const row = { t, live, trig, prem: live * rate * i.cover, fee: live * fee * i.cover, payout: trig * i.cover, df };
     row.pvCost = (row.prem + row.fee) * df;
     row.pvPayout = row.payout * df;
     row.coll = live * y * i.cover;
@@ -226,8 +270,7 @@ function compute(i) {
   const totalCost = sum.prem + sum.fee + i.setup;
   const pvCost = sum.pvCost + i.setup;
   return {
-    p, rate, term, years, sum,
-    annualPrem, annualFee, endowYield,
+    p, rate, term, years, sum, annualPrem, annualFee, endowYield,
     netAnnual: annualPrem + annualFee - endowYield,
     totalIfNever: annualPrem * term,
     totalIfNeverShare: i.cover ? annualPrem * term / i.cover : 0,
@@ -236,34 +279,86 @@ function compute(i) {
     pAny: 1 - Math.pow(1 - p, term),
     pvCost, pvPayout: sum.pvPayout,
     pvCostPerDollar: sum.pvPayout ? pvCost / sum.pvPayout : 0,
-    coupon: y + rate,
-    excess: rate - p,
-    investorNet: sum.prem - sum.payout
+    coupon: y + rate, excess: rate - p, investorNet: sum.prem - sum.payout
+  };
+}
+
+// Three fixed sponsor scenarios: no payout, a partial payout and a full payout in a chosen year.
+// After a payout the paid-out share of cover stops costing premium, unless cover is renewed.
+function scenarios(i) {
+  const c = compute(i);
+  const Y = Math.max(1, Math.min(c.term, Math.round(i.payoutYear)));
+  const share = Math.max(0, Math.min(100, i.partial)) / 100;
+  const perYear = c.annualPrem + c.annualFee;
+  const defs = [
+    { key: "none", name: "No payout", f: 0 },
+    { key: "partial", name: Math.round(share * 100) + "% payout", f: share },
+    { key: "full", name: "Full payout", f: 1 }
+  ];
+  return {
+    year: Y, term: c.term,
+    list: defs.map(d => {
+      let pos = -i.setup, paid = i.setup, received = 0;
+      const points = [{ t: 0, v: pos }];
+      for (let t = 1; t <= c.term; t++) {
+        const frac = (d.f > 0 && t > Y && !i.renew) ? 1 - d.f : 1;
+        const cost = Math.max(0, perYear * frac - c.endowYield);
+        const got = (d.f > 0 && t === Y) ? d.f * i.cover : 0;
+        paid += cost; received += got; pos += got - cost;
+        points.push({ t, v: pos });
+      }
+      return { key: d.key, name: d.name, points, paid, received, net: received - paid };
+    })
   };
 }
 /* MODEL-END */
 
 const FIELDS = Object.keys(DEFAULTS);
+const TEXT_FIELDS = FIELDS.filter(k => k !== "renew" && k !== "payoutYear");
+const COLORS = { none: "#C41E3A", partial: "#00B0BF", full: "#0071BC" };
 const $ = id => document.getElementById(id);
+const num = v => Number(v).toLocaleString("en-US", { maximumFractionDigits: 6 });
 const usd = v => (v < 0 ? "(" : "") + "$" + Math.abs(Math.round(v)).toLocaleString("en-US") + (v < 0 ? ")" : "");
-const pct = (v, dp = 1) => (v < 0 ? "(" : "") + Math.abs(v * 100).toFixed(dp) + "%" + (v < 0 ? ")" : "");
-const dol = v => "$" + v.toFixed(2);
+const pct = (v, dp = 1) => (v < 0 ? "(" : "") +
+  (Math.abs(v) * 100).toLocaleString("en-US", { minimumFractionDigits: dp, maximumFractionDigits: dp }) + "%" + (v < 0 ? ")" : "");
+const dol = v => "$" + v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const parse = s => { const c = String(s).replace(/[^0-9.]/g, ""); return c === "" || c === "." ? null : Number(c); };
+
+// Keep comma separators in a text input while the user types, holding the caret in place.
+function commaFormat(el) {
+  const raw = el.value, pos = el.selectionStart === null ? raw.length : el.selectionStart;
+  const right = raw.slice(pos).replace(/[^0-9.]/g, "").length;
+  let clean = raw.replace(/[^0-9.]/g, "");
+  const dot = clean.indexOf(".");
+  let whole = dot === -1 ? clean : clean.slice(0, dot);
+  const frac = dot === -1 ? "" : "." + clean.slice(dot + 1).replace(/\./g, "");
+  whole = whole.replace(/^0+(?=\d)/, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const out = whole + frac;
+  el.value = out;
+  let caret = out.length, seen = 0;
+  while (caret > 0 && seen < right) { caret--; if (/[0-9.]/.test(out[caret])) seen++; }
+  try { el.setSelectionRange(caret, caret); } catch (e) { /* not focusable yet */ }
+}
 
 function readInputs() {
   const i = {};
-  for (const k of FIELDS) {
-    const raw = $(k).value;
-    if (k === "override") i[k] = raw === "" ? null : Math.max(0, Number(raw));
-    else if (raw === "" || isNaN(Number(raw))) i[k] = DEFAULTS[k];
-    else i[k] = Number(raw);
+  for (const k of TEXT_FIELDS) {
+    const v = parse($(k).value);
+    i[k] = k === "override" ? v : (v === null ? DEFAULTS[k] : v);
   }
+  i.renew = Number($("renew").value);
   i.period = Math.max(1, i.period);
+  i.term = Math.max(1, Math.min(50, Math.round(i.term)));
+  i.payoutYear = Math.max(1, Math.min(i.term, Number($("payoutYear").value) || 1));
   return i;
 }
 
 function writeInputs(i) {
-  for (const k of FIELDS) $(k).value = (i[k] === null || i[k] === undefined) ? "" : i[k];
+  for (const k of TEXT_FIELDS) $(k).value = (i[k] === null || i[k] === undefined) ? "" : num(i[k]);
+  $("renew").value = i.renew ? "1" : "0";
+  $("payoutYear").max = Math.max(1, Math.min(50, Math.round(i.term)));
+  $("payoutYear").value = i.payoutYear;
 }
 
 function rows(el, list) {
@@ -271,8 +366,121 @@ function rows(el, list) {
     `<tr><td>${esc(label)}</td><td class="${cls || ""}">${esc(value)}</td></tr>`).join("");
 }
 
+/* ---------- scenario chart ---------- */
+const SVG = "http://www.w3.org/2000/svg";
+const mk = (tag, attrs, text) => {
+  const e = document.createElementNS(SVG, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text !== undefined) e.textContent = text;
+  return e;
+};
+const compact = v => {
+  const a = Math.abs(v), s = v < 0 ? "-" : "";
+  if (a >= 1e9) return s + "$" + +(a / 1e9).toFixed(1) + "B";
+  if (a >= 1e6) return s + "$" + +(a / 1e6).toFixed(1) + "M";
+  if (a >= 1e3) return s + "$" + +(a / 1e3).toFixed(0) + "K";
+  return s + "$" + Math.round(a);
+};
+function niceTicks(lo, hi, n) {
+  const span = (hi - lo) || 1, raw = span / n, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => s >= raw);
+  const out = [];
+  for (let v = Math.floor(lo / step) * step; v <= hi + step * 0.5; v += step) out.push(Math.round(v / step) * step);
+  return out;
+}
+let chartState = null;
+
+function drawChart(sc) {
+  const svg = $("chart");
+  svg.textContent = "";
+  const W = 760, H = 330, m = { l: 62, r: 96, t: 14, b: 34 };
+  const all = sc.list.flatMap(s => s.points.map(p => p.v)).concat([0]);
+  const ticks = niceTicks(Math.min(...all), Math.max(...all), 5);
+  const lo = ticks[0], hi = ticks[ticks.length - 1];
+  const x = t => m.l + (W - m.l - m.r) * t / sc.term;
+  const y = v => m.t + (H - m.t - m.b) * (1 - (v - lo) / ((hi - lo) || 1));
+
+  for (const v of ticks) {
+    svg.appendChild(mk("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: v === 0 ? "#8a949c" : "#e6eaee", "stroke-width": 1 }));
+    svg.appendChild(mk("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end", "font-size": 12, fill: "#5b6770" }, compact(v)));
+  }
+  const stepX = sc.term > 25 ? 5 : sc.term > 12 ? 2 : 1;
+  for (let t = 0; t <= sc.term; t += stepX)
+    svg.appendChild(mk("text", { x: x(t), y: H - 12, "text-anchor": "middle", "font-size": 12, fill: "#5b6770" }, t));
+  svg.appendChild(mk("text", { x: W - m.r, y: H - 12, dx: 8, "font-size": 12, fill: "#5b6770" }, "year"));
+
+  // payout year marker
+  svg.appendChild(mk("line", { x1: x(sc.year), x2: x(sc.year), y1: m.t, y2: H - m.b, stroke: "#b9c2c9", "stroke-width": 1 }));
+  svg.appendChild(mk("text", { x: x(sc.year), y: m.t + 10, dx: sc.year > sc.term * 0.8 ? -6 : 6,
+    "text-anchor": sc.year > sc.term * 0.8 ? "end" : "start", "font-size": 12, fill: "#5b6770" }, "payout year"));
+
+  for (const s of sc.list) {
+    const d = s.points.map((p, n) => (n ? "L" : "M") + x(p.t).toFixed(1) + " " + y(p.v).toFixed(1)).join(" ");
+    svg.appendChild(mk("path", { d, fill: "none", stroke: COLORS[s.key], "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+  }
+  // end markers and end labels (labels dropped when they would collide; legend and table still carry them)
+  const ends = sc.list.map(s => ({ s, py: y(s.points[s.points.length - 1].v) })).sort((a, b) => a.py - b.py);
+  const clash = ends.some((e, n) => n && e.py - ends[n - 1].py < 15);
+  for (const e of ends) {
+    svg.appendChild(mk("circle", { cx: x(sc.term), cy: e.py, r: 4.5, fill: COLORS[e.s.key], stroke: "#fff", "stroke-width": 2 }));
+    if (!clash) svg.appendChild(mk("text", { x: x(sc.term) + 10, y: e.py + 4, "font-size": 12, "font-weight": 500, fill: "#1d2730" },
+      compact(e.s.points[e.s.points.length - 1].v)));
+  }
+  const cross = mk("line", { y1: m.t, y2: H - m.b, stroke: "#1d2730", "stroke-width": 1, visibility: "hidden" });
+  svg.appendChild(cross);
+  const dots = sc.list.map(s => {
+    const c = mk("circle", { r: 4.5, fill: COLORS[s.key], stroke: "#fff", "stroke-width": 2, visibility: "hidden" });
+    svg.appendChild(c); return c;
+  });
+  chartState = { sc, x, y, W, m, cross, dots, at: null };
+
+  const lg = $("legend"); lg.textContent = "";
+  for (const s of sc.list) {
+    const item = document.createElement("span"), key = document.createElement("i");
+    key.className = "key"; key.style.borderColor = COLORS[s.key];
+    item.appendChild(key); item.appendChild(document.createTextNode(s.name));
+    lg.appendChild(item);
+  }
+}
+
+function showAt(t) {
+  const st = chartState; if (!st) return;
+  t = Math.max(0, Math.min(st.sc.term, t)); st.at = t;
+  const px = st.x(t);
+  st.cross.setAttribute("x1", px); st.cross.setAttribute("x2", px); st.cross.setAttribute("visibility", "visible");
+  const tip = $("tip"); tip.textContent = "";
+  const yr = document.createElement("div"); yr.className = "yr";
+  yr.textContent = t === 0 ? "Start (set-up cost paid)" : "End of year " + t; tip.appendChild(yr);
+  st.sc.list.forEach((s, n) => {
+    const v = s.points[t].v;
+    st.dots[n].setAttribute("cx", px); st.dots[n].setAttribute("cy", st.y(v)); st.dots[n].setAttribute("visibility", "visible");
+    const r = document.createElement("div"); r.className = "r";
+    const b = document.createElement("b"); b.textContent = usd(v);
+    const lab = document.createElement("span"), key = document.createElement("i");
+    key.className = "key"; key.style.borderColor = COLORS[s.key];
+    lab.appendChild(key); lab.appendChild(document.createTextNode(s.name));
+    r.appendChild(lab); r.appendChild(b); tip.appendChild(r);
+  });
+  tip.style.display = "block";
+  const wrap = $("chartwrap").getBoundingClientRect(), frac = px / st.W;
+  tip.style.left = frac > 0.55 ? "" : (frac * wrap.width + 14) + "px";
+  tip.style.right = frac > 0.55 ? ((1 - frac) * wrap.width + 14) + "px" : "";
+}
+function hideTip() {
+  const st = chartState; if (!st) return;
+  st.at = null; $("tip").style.display = "none";
+  st.cross.setAttribute("visibility", "hidden");
+  st.dots.forEach(d => d.setAttribute("visibility", "hidden"));
+}
+
+/* ---------- render ---------- */
 function render() {
   const i = readInputs();
+  const slider = $("payoutYear");
+  slider.max = i.term;
+  if (Number(slider.value) > i.term) slider.value = i.term;
+  i.payoutYear = Number(slider.value);
+  $("payoutYearOut").textContent = "Year " + i.payoutYear;
   const r = compute(i);
 
   $("kpis").innerHTML = [
@@ -294,6 +502,18 @@ function render() {
     v.className = "verdict good";
     v.textContent = `Investors are paid ${pct(r.excess)} a year above expected loss for taking the risk.`;
   }
+
+  // Sponsor scenarios
+  const sc = scenarios(i);
+  drawChart(sc);
+  $("scen").innerHTML =
+    "<thead><tr><th>Scenario</th><th>Total paid</th><th>Payout received</th><th>Net position</th><th>Received per $1 paid</th></tr></thead><tbody>" +
+    sc.list.map(s => `<tr><td>${esc(s.name)}${s.key === "none" ? "" : " in year " + sc.year}</td><td>${usd(s.paid)}</td>` +
+      `<td>${usd(s.received)}</td><td class="${s.net < 0 ? "neg" : ""}">${usd(s.net)}</td>` +
+      `<td>${dol(s.paid ? s.received / s.paid : 0)}</td></tr>`).join("") + "</tbody>";
+  $("scenNote").textContent = i.renew
+    ? "Cover is renewed after a payout, so premium and fee continue on the full cover to the end of the term."
+    : "After a payout, premium and fee stop on the share of cover that has paid out. In the partial scenario the rest of the cover stays in place to the end of the term.";
 
   rows($("sponsor"), [
     ["Annual premium", usd(r.annualPrem)],
@@ -324,7 +544,6 @@ function render() {
     ["Expected net gain over T-bills", usd(r.investorNet), r.investorNet < 0 ? "neg" : ""]
   ]);
 
-  // Premium cases
   const cases = [
     ["Fixed 7%", { override: 7 }],
     ["Expected loss only (1.0x)", { override: null, multiple: 1 }],
@@ -345,7 +564,6 @@ function render() {
         `<td>${dol(per)}</td><td class="${c.excess < 0 ? "neg" : ""}">${pct(c.excess)}</td></tr>`;
     }).join("") + "</tbody>";
 
-  // Sensitivity grid
   const periods = [5, 7, 10, 20, 30], mults = [1, 1.25, 1.5, 2.1, 2.5];
   const metric = $("metric").value;
   $("grid").innerHTML =
@@ -359,7 +577,6 @@ function render() {
       return `<td class="${here ? "mark" : ""}">${val}</td>`;
     }).join("") + "</tr>").join("") + "</tbody>";
 
-  // Year by year
   $("years").innerHTML =
     "<thead><tr><th>Year</th><th>Chance bond is live</th><th>Chance of trigger</th>" +
     "<th>Expected premium</th><th>Expected fee</th><th>Expected payout</th>" +
@@ -394,19 +611,42 @@ function scenarioUrl() {
 
 if (typeof document !== "undefined") {
   writeInputs(fromUrl());
+  document.querySelectorAll(".field[data-tip]").forEach(f => {
+    const c = f.querySelector("input, select");
+    if (c) c.setAttribute("aria-description", f.getAttribute("data-tip"));
+  });
   render();
-  $("form").addEventListener("input", render);
+  $("form").addEventListener("input", e => {
+    if (e.target.type === "text") commaFormat(e.target);
+    render();
+  });
+  for (const id of ["partial"]) $(id).addEventListener("input", e => { commaFormat(e.target); render(); });
+  $("payoutYear").addEventListener("input", render);
   $("metric").addEventListener("change", render);
   $("reset").addEventListener("click", () => { writeInputs(DEFAULTS); render(); $("shareMsg").textContent = ""; });
   $("share").addEventListener("click", async () => {
     const url = scenarioUrl();
-    try {
-      await navigator.clipboard.writeText(url);
-      $("shareMsg").textContent = "Link copied.";
-    } catch (e) {
-      $("shareMsg").textContent = url;
-    }
+    try { await navigator.clipboard.writeText(url); $("shareMsg").textContent = "Link copied."; }
+    catch (e) { $("shareMsg").textContent = url; }
     try { history.replaceState(null, "", url); } catch (e) { /* not available in some previews */ }
+  });
+
+  const svg = $("chart");
+  svg.addEventListener("pointermove", e => {
+    const st = chartState; if (!st) return;
+    const box = svg.getBoundingClientRect();
+    const vx = (e.clientX - box.left) / box.width * st.W;
+    showAt(Math.round((vx - st.m.l) / (st.W - st.m.l - st.m.r) * st.sc.term));
+  });
+  svg.addEventListener("pointerleave", hideTip);
+  svg.addEventListener("blur", hideTip);
+  svg.addEventListener("focus", () => showAt(chartState ? chartState.sc.year : 0));
+  svg.addEventListener("keydown", e => {
+    if (!chartState) return;
+    const at = chartState.at === null ? chartState.sc.year : chartState.at;
+    if (e.key === "ArrowRight") { showAt(at + 1); e.preventDefault(); }
+    if (e.key === "ArrowLeft") { showAt(at - 1); e.preventDefault(); }
+    if (e.key === "Escape") hideTip();
   });
 }
 </script>
